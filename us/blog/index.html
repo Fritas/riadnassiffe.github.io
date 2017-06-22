@@ -35,7 +35,7 @@
     
   <div class="blog-post">
   
-    <h2><a href="../../us/blog/first-post/">Hello Website</a></h2>
+    <h2><a href="../../us/blog/first-post/">Measuring Power Consumption With Raspberry Pi</a></h2>
   
   <p class="meta">
     written by
@@ -44,8 +44,91 @@
     
     on 2017-05-10
   </p>
-  <p>This is an example blog post.  Not much here but that's not the point :)</p>
+  <ul>
+    <li>
+        <h1>Saving Energy with Raspberry Pi:</h1>
+    </li>
+</ul><p>A common way to save energy with computers is exploring the CPU frequency switch capability. The Raspberry Pi uses an  ARM1176JZF-S processor and according the ARM on-line documentation this CPU can be run in any frequency under the maximal one, supported by the processor. To be able to performance any frequency the ARM11 architecture emulate a continuous DVS(Dynamic Voltage Scaling), in a discrete processor,  by holding the voltage at the maximum level and then switch the system clock between the maximum frequency and off. In order to apply this the IEM software &#8211; it is a software that runs on ARM processor to classify the types of activity and to analyze their processor utilization patterns for global prediction about the future performance required by the system &#8211; defines frames that are directly related to the performance level. In <a href="./dvs_emulation_example3.png">Figure 1</a> the system performance requested in the first frame is 50%, so the CPU work at maximum frequency for half of the frame and than it is turned off for the rest of the frame, in the second frame a performance of 25% of the CPU is requested, and then 75% in the last frame.</p><div data-shortcode="caption" id="attachment_89" style="width: 630px" class="wp-caption aligncenter">
+    <figure>
+        <img " src="./dvs_emulation_example3.png?w=620&#038;h=198" alt="ARM DVS Example" width="620" height="198" />
+        <figcaption>Figure 1 &#8211; ARM implementation of continuous DVS, image frim [1] <figcaption>
+    </figure>
 
+</div><ul>
+    <li>
+        <h1>Testing Continuous DVS:</h1>
+    </li>
+</ul><p>To test the Rasppberry Pi DVS capability the two experiments were set, the first on consist in verify the effect of different frequencies over and application CPU execution time and the other is about the power consumption, all the tests were done using <a href="http://archlinuxarm.org/">Arch Linux ARM</a>. To change the frequency the command <em><strong>cpufreq-set</strong></em> was execute, here is an example about how to use this command:</p><pre class="brush: plain; title: ; notranslate" title="">
+    cpufreq-set -f 0.2 GHz
+</pre><p>in this case 0.200 is the desired frequency in GHz and -f tells the new frequency.</p><ol style="padding-left:30px;">
+
+<ul>
+    <li style="text-align:left;">CPU Performance According Frequency:</li>
+</ul>
+
+</ol><p>
+In order to test the effect of continuous DVS emulation in a system like the Raspberry Pi a code witch the execution depends only of the CPU was executed and the time used by the CPU was measured. The code used in this experiment was:
+</p><pre class="brush: cpp; title: ; notranslate" title="Code to measure the effect of continuous DVS emulation in a code witch the execution depends only of the CPU">
+    int main(int argc, char *argv[])
+    {
+     int limit;
+
+     if (argc == 0) {
+         printf(&quot;%d&quot;, argc);
+         printf(&quot;1 argument\n&quot;);
+         return(0);
+     }else {
+         limit = atoi(argv[1]);
+     }
+     int i;
+     struct timespec startCpuTime, stopCpuTime, startTotalTime, stopTotalTime;
+
+     clock_gettime(CLOCK_THREAD_CPUTIME_ID, &amp;startCpuTime);
+
+     for(i=0;i
+         log(2*i)+exp(i)+pow(2,i)*i;
+
+     clock_gettime(CLOCK_THREAD_CPUTIME_ID, &amp;stopCpuTime);
+
+     double cpuUsedTime = ((double) (stopCpuTime.tv_sec - startCpuTime.tv_sec)
+     + (stopCpuTime.tv_nsec - startCpuTime.tv_nsec)
+     / (double) 1000000000L);
+     double totalUsedTime = ((double) (stopTotalTime.tv_sec - startTotalTime.tv_sec)
+     + (stopTotalTime.tv_nsec - startTotalTime.tv_nsec)
+     / (double) 1000000000L);
+     printf(&quot;CPU used time =%g and application total time=%g \n&quot;,cpuUsedTime,totalUsedTime);
+     return 0;
+    }
+</pre><p>The above code can be available at the repository [4] . The code is very simple and it basically consists on the execution of a <em><strong>for</strong> </em>while <em><strong>i</strong></em> is lower than <em><strong>limit </strong></em>and the execution time is measured by use the<strong><em> clock_gettim</em>e<em>()</em></strong> function from <strong><em>time.h</em></strong><em>, </em>to get the exactly time of the CPU usage the <strong><em> clock_gettim</em>e<em>() </em></strong>used<em> the parameter <strong>CLOCK_THREAD_CPUTIME</strong></em>. To compile the program the GCC was used with the flags -lrt (this flag is needed to use the <em><strong>clock_gettime</strong><strong>()</strong></em>) and -lm(due the exponential function) . By executing the above code,  and varying the frequency at steps of 0.1GHz in a range of 0.2GHz to 0.7GHz  the CPU execution time was measured and plotted in  <a title="Figure 2" href="./raspberrypifreqtest3.png">Figure 2</a>.
+</p><figure>
+    <img  src="./raspberrypifreqtest3.png?w=574&#038;h=476" alt="Raspberry Pi Frequency Test" width="574" height="476"/>
+    <figcaption>Figure 2 &#8211; Shows amount of time spend by the CPU to execute the test program.</figcaption>
+</figure><ul style="padding-left:30px;">
+    <li>
+        <span style="line-height:1.714285714;font-size:1rem;">Power Consumption According Frequency and Voltage Scaling:</span>
+    </li>
+</ul><p>
+In order to realize an experiment to verify the power consumption according the frequency an Tenma 72-9380A multimeter  was used and the Raspberry Pi were powered by GPIO interface. For the experiments the frequencies of: 0.1GHz, 0.2GHz, 0.4GHz, 0.6GHz, 0.8GHz and 1 GHz were used. To measure the power consumption the above application were executed about 10s and the mean power consumption was used to plot the graphic in <a title="Figure 3" href="./powerxfrequency.png">Figure 3</a>. As expected the power consumption increased according the frequency with a behavior expressed by <img src="https://s0.wp.com/latex.php?latex=%5Calpha+f%5E3&#038;bg=ffffff&#038;fg=444444&#038;s=0" alt="&#92;alpha f^3" title="&#92;alpha f^3" class="latex" />.
+</p><figure>
+    <img src="./powerxfrequency.png?w=582&#038;h=465" alt="Raspberry Pi Power Test" width="582" height="465" />
+    <figcaption>Figure 3 &#8211; Shows the Raspberry Pi Power consumption according the selected frequency.</figcaption>
+</figure><p>It is important to notice in between frequencies 0.2GHz-0.6GHz, 0.6GHz-0.8GHz and 0.8GHz-1GHz the power line changes its increasing rate from the previous interval, with the exception of the interval from 0.4GHz to 0.6GHz. This exception is caused because the ARM DVS doesn&#8217;t need to change the voltage to simulate 0.4GHz and 0.6GHz, and when only the frequency changes the power consumption reduction is proportional to the increase of time need to execute the program.
+</p><ul>
+    <li>
+        <h1>Conclusion:</h1>
+    </li>
+</ul><p>
+As a conclusion of the first experiment it is possible to confirm that the continuous DVS implies in different execution time according the used frequency. And According the second experiment it is clear that the power changes according the frequency, but the frequency modification only result in power save if the voltage changes too.
+</p><ul>
+    <li>
+        <h1>References</h1>
+    </li>
+</ul><ol style="padding-left:30px;">
+    <li>ARM &#8211; <a href="http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0375a/Cegbfdjb.html">ARM1176JZF Development Chip Technical Reference</a></li>
+    <li>RaspBerry Pi &#8211; <a href="http://elinux.org/RPiconfig">RPiconfig</a></li>
+    <li>clock_gettime &#8211; <a title="Man7.org" href="http://man7.org/linux/man-pages/man2/clock_gettime.2.html">Man7.org</a></li>
+    <li>Test program code &#8211; <a title="GitHub" href="https://github.com/riadnassiffe/RaspberryPiFreqTest">Github</a></li>
+</ol>
   </div>
 
   
