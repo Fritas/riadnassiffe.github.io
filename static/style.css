@@ -1,5 +1,5 @@
 body {
-    font-family: 'Verdana', sans-serif;
+    font-family: Arial, sans-serif;
     margin: 50px 25px;
 }
 
@@ -7,16 +7,28 @@ a {
     color: #ffffff;
 }
 
-a:hover {
+.menu_link:hover {
     color: #ffffff;
     font-size:110%;;
 }
 
-header, footer, div.page {
-    width: 760px;
+header{
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    width: 80%;
     margin: 0 auto;
-    background: #096318;
+    background: #006600;
     padding: 20px 30px;
+
+}
+footer {
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    width: 80%;
+    margin: 0 auto;
+    background: #006600;
+    padding: 20px 30px;
+
 }
 
 header h1 {
@@ -39,9 +51,18 @@ header nav ul li {
 }
 
 div.page {
-    background: #90c74a;
+    border:1px solid #fdfdfd;
+    background: #339933;
+    width: 80%;
+    margin: 0 auto;
+    padding: 20px 30px;
 }
 
 p{
     text-align: justify;
+}
+
+.highlight{
+    background: #33cc33;
+    border-radius: 5px;
 }
